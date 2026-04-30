@@ -80,7 +80,6 @@ body {
 }
 
 .title-seconds-value {
-  position: static;
   width: 100%;
   display: block;
   text-align: right;
