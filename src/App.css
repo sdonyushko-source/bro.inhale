@@ -1,0 +1,132 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+  background: #111111;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #111111;
+}
+
+.card {
+  width: 208px;
+  height: 248px;
+  background: #17192a;
+  border-radius: 12px;
+  padding: 20px 14px 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.title {
+  position: absolute;
+  top: 27px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  height: 34px;
+  white-space: nowrap;
+
+  color: #f4f4f6;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0;
+  font-family: 'DM Mono', monospace;
+}
+
+.title-phase,
+.title-seconds {
+  position: absolute;
+  top: 0;
+  height: 34px;
+  display: flex;
+  align-items: center;
+}
+
+.title-phase {
+  left: 30px;
+  width: 7ch;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.title-phase-value {
+  width: 100%;
+  display: block;
+  line-height: 34px;
+}
+
+.title-seconds {
+  right: 30px;
+  width: 2.1ch;
+  justify-content: flex-end;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.title-seconds-value {
+  position: static;
+  width: 100%;
+  display: block;
+  text-align: right;
+  line-height: 34px;
+}
+
+.orb-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: 40px;
+  width: 140px;
+  height: 140px;
+  transform: translateX(-50%);
+}
+
+.orb-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.status-row {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(244, 244, 246, 0.55);
+  font-size: 12px;
+  font-family: 'DM Mono', monospace;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0;
+}
+
+.progress {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  height: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  opacity: 0.5;
+  background: linear-gradient(90deg, #d5d7df 0%, #d5d7df 42%, #3a3c48 42%, #3a3c48 100%);
+}
