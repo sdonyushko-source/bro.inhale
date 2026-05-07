@@ -6,25 +6,124 @@ import PracticeDetailScreen from './PracticeDetailScreen'
 import PracticeFinishScreen from './PracticeFinishScreen'
 import { PRACTICES } from './practices'
 
-const INHALE_DURATION = 4
-const HOLD_DURATION = 7
-const EXHALE_DURATION = 8
-const TEST_CYCLES_478 = 16
 const MIN_ORB_SIZE = 24
 const MAX_ORB_SIZE = 120
 const COLOR_TRANSITION_DURATION = 0.35
-const PHASES = [
-  { name: 'inhale', duration: INHALE_DURATION },
-  { name: 'hold', duration: HOLD_DURATION },
-  { name: 'exhale', duration: EXHALE_DURATION },
-]
+const FLOW_CONFIGS = {
+  '478': {
+    cycles: 16,
+    phases: [
+      {
+        name: 'inhale',
+        label: 'inhale',
+        duration: 4,
+        fromSize: MIN_ORB_SIZE,
+        toSize: MAX_ORB_SIZE,
+        colorPhase: 'inhale',
+      },
+      {
+        name: 'hold',
+        label: 'hold',
+        duration: 7,
+        fromSize: MAX_ORB_SIZE,
+        toSize: MAX_ORB_SIZE,
+        colorPhase: 'hold',
+      },
+      {
+        name: 'exhale',
+        label: 'exhale',
+        duration: 8,
+        fromSize: MAX_ORB_SIZE,
+        toSize: MIN_ORB_SIZE,
+        colorPhase: 'exhale',
+      },
+    ],
+  },
+  box: {
+    cycles: 19,
+    phases: [
+      {
+        name: 'inhale',
+        label: 'inhale',
+        duration: 4,
+        fromSize: MIN_ORB_SIZE,
+        toSize: MAX_ORB_SIZE,
+        colorPhase: 'inhale',
+      },
+      {
+        name: 'hold_after_inhale',
+        label: 'hold',
+        duration: 4,
+        fromSize: MAX_ORB_SIZE,
+        toSize: MAX_ORB_SIZE,
+        colorPhase: 'hold',
+      },
+      {
+        name: 'exhale',
+        label: 'exhale',
+        duration: 4,
+        fromSize: MAX_ORB_SIZE,
+        toSize: MIN_ORB_SIZE,
+        colorPhase: 'exhale',
+      },
+      {
+        name: 'hold_after_exhale',
+        label: 'hold',
+        duration: 4,
+        fromSize: MIN_ORB_SIZE,
+        toSize: MIN_ORB_SIZE,
+        colorPhase: 'hold',
+      },
+    ],
+  },
+  coherent: {
+    cycles: 30,
+    phases: [
+      {
+        name: 'inhale',
+        label: 'inhale',
+        duration: 5,
+        fromSize: MIN_ORB_SIZE,
+        toSize: MAX_ORB_SIZE,
+        colorPhase: 'inhale',
+      },
+      {
+        name: 'exhale',
+        label: 'exhale',
+        duration: 5,
+        fromSize: MAX_ORB_SIZE,
+        toSize: MIN_ORB_SIZE,
+        colorPhase: 'exhale',
+      },
+    ],
+  },
+  'extended-exhale': {
+    cycles: 30,
+    phases: [
+      {
+        name: 'inhale',
+        label: 'inhale',
+        duration: 4,
+        fromSize: MIN_ORB_SIZE,
+        toSize: MAX_ORB_SIZE,
+        colorPhase: 'inhale',
+      },
+      {
+        name: 'exhale',
+        label: 'exhale',
+        duration: 6,
+        fromSize: MAX_ORB_SIZE,
+        toSize: MIN_ORB_SIZE,
+        colorPhase: 'exhale',
+      },
+    ],
+  },
+}
 const COUNTDOWN_STEPS_478 = [
   { label: 'relax', value: 3 },
   { label: 'get ready', value: 2 },
   { label: 'inhale', value: 1 },
 ]
-const CYCLE_DURATION = PHASES.reduce((sum, phase) => sum + phase.duration, 0)
-const TEST_FLOW_478_DURATION = CYCLE_DURATION * TEST_CYCLES_478
 const PHASE_GRADIENTS = {
   inhale: { inner: '#EAFFEC', outer: '#53D162' },
   hold: { inner: '#FFFBF6', outer: '#FFAF46' },
@@ -62,6 +161,10 @@ function App() {
   const [flowMode, setFlowMode] = useState('idle')
   const [countdownIndex, setCountdownIndex] = useState(0)
   const [elapsedInCycleMs, setElapsedInCycleMs] = useState(0)
+  const activeFlowConfig = activeFlowPracticeId ? FLOW_CONFIGS[activeFlowPracticeId] : null
+  const activeFlowPhases = activeFlowConfig?.phases ?? []
+  const activeFlowCycleDuration = activeFlowPhases.reduce((sum, phase) => sum + phase.duration, 0)
+  const activeFlowTotalDuration = activeFlowCycleDuration * (activeFlowConfig?.cycles ?? 0)
 
   useEffect(() => {
     const timerId = setTimeout(() => {
@@ -73,7 +176,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (activeFlowPracticeId !== '478' || flowMode !== 'countdown') {
+    if (!activeFlowConfig || flowMode !== 'countdown') {
       return undefined
     }
 
@@ -87,21 +190,21 @@ function App() {
     }, 1000)
 
     return () => clearTimeout(timeoutId)
-  }, [activeFlowPracticeId, flowMode, countdownIndex])
+  }, [activeFlowConfig, flowMode, countdownIndex])
 
   useEffect(() => {
     if (
       showSplash ||
       showPracticeList ||
       showPracticeDetail ||
-      activeFlowPracticeId !== '478' ||
+      !activeFlowConfig ||
       flowMode !== 'running'
     ) {
       return undefined
     }
 
     let frameId = 0
-    const testDurationMs = TEST_FLOW_478_DURATION * 1000
+    const testDurationMs = activeFlowTotalDuration * 1000
     const flowStartMs = performance.now()
 
     const tick = () => {
@@ -119,7 +222,7 @@ function App() {
 
     frameId = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frameId)
-  }, [showSplash, showPracticeList, showPracticeDetail, activeFlowPracticeId, flowMode])
+  }, [showSplash, showPracticeList, showPracticeDetail, activeFlowConfig, flowMode, activeFlowTotalDuration])
 
   if (showSplash) {
     return <SplashScreen />
@@ -143,8 +246,13 @@ function App() {
       <PracticeDetailScreen
         practice={selectedPractice}
         onStart={() => {
-          if (selectedPracticeId === '478') {
-            setActiveFlowPracticeId('478')
+          if (
+            selectedPracticeId === '478' ||
+            selectedPracticeId === 'box' ||
+            selectedPracticeId === 'coherent' ||
+            selectedPracticeId === 'extended-exhale'
+          ) {
+            setActiveFlowPracticeId(selectedPracticeId)
             setCountdownIndex(0)
             setElapsedInCycleMs(0)
             setFlowMode('countdown')
@@ -159,7 +267,7 @@ function App() {
     )
   }
 
-  if (activeFlowPracticeId === '478' && flowMode === 'countdown') {
+  if (activeFlowConfig && flowMode === 'countdown') {
     const step = COUNTDOWN_STEPS_478[countdownIndex]
 
     return (
@@ -172,7 +280,7 @@ function App() {
     )
   }
 
-  if (activeFlowPracticeId === '478' && flowMode === 'finished') {
+  if (activeFlowConfig && flowMode === 'finished') {
     return (
       <PracticeFinishScreen
         onClose={() => {
@@ -187,16 +295,22 @@ function App() {
     )
   }
 
+  if (!activeFlowConfig || flowMode !== 'running') {
+    return null
+  }
+
   const elapsedInCycleSec = elapsedInCycleMs / 1000
-  const flowElapsedInSec = Math.min(elapsedInCycleSec, TEST_FLOW_478_DURATION)
+  const flowElapsedInSec = Math.min(elapsedInCycleSec, activeFlowTotalDuration)
   const elapsedInTestCycleSec =
-    flowElapsedInSec >= TEST_FLOW_478_DURATION ? CYCLE_DURATION - 0.001 : flowElapsedInSec % CYCLE_DURATION
+    flowElapsedInSec >= activeFlowTotalDuration
+      ? activeFlowCycleDuration - 0.001
+      : flowElapsedInSec % activeFlowCycleDuration
   let phaseStart = 0
   let currentPhaseIndex = 0
-  let currentPhase = PHASES[0]
+  let currentPhase = activeFlowPhases[0]
 
-  for (let i = 0; i < PHASES.length; i += 1) {
-    const phase = PHASES[i]
+  for (let i = 0; i < activeFlowPhases.length; i += 1) {
+    const phase = activeFlowPhases[i]
     if (elapsedInTestCycleSec < phaseStart + phase.duration) {
       currentPhaseIndex = i
       currentPhase = phase
@@ -210,29 +324,22 @@ function App() {
   const displayCount = Math.max(1, Math.ceil(phaseTimeLeft))
   const phaseProgress = Math.min(1, elapsedInPhaseSec / currentPhase.duration)
 
-  let orbSize = MAX_ORB_SIZE
-  if (currentPhase.name === 'inhale') {
-    orbSize = MIN_ORB_SIZE + (MAX_ORB_SIZE - MIN_ORB_SIZE) * phaseProgress
-  } else if (currentPhase.name === 'hold') {
-    orbSize = MAX_ORB_SIZE
-  } else if (currentPhase.name === 'exhale') {
-    orbSize = MAX_ORB_SIZE - (MAX_ORB_SIZE - MIN_ORB_SIZE) * phaseProgress
-  }
+  const orbSize = currentPhase.fromSize + (currentPhase.toSize - currentPhase.fromSize) * phaseProgress
 
   const orbRadius = orbSize / 2
-  const previousPhaseIndex = (currentPhaseIndex - 1 + PHASES.length) % PHASES.length
-  const previousPhaseName = PHASES[previousPhaseIndex].name
-  const currentGradient = PHASE_GRADIENTS[currentPhase.name]
+  const previousPhaseIndex = (currentPhaseIndex - 1 + activeFlowPhases.length) % activeFlowPhases.length
+  const previousPhaseName = activeFlowPhases[previousPhaseIndex].colorPhase
+  const currentGradient = PHASE_GRADIENTS[currentPhase.colorPhase]
   const previousGradient = PHASE_GRADIENTS[previousPhaseName]
   const colorTransitionProgress = Math.min(1, elapsedInPhaseSec / COLOR_TRANSITION_DURATION)
   const orbInnerColor = mixHexColors(previousGradient.inner, currentGradient.inner, colorTransitionProgress)
   const orbOuterColor = mixHexColors(previousGradient.outer, currentGradient.outer, colorTransitionProgress)
-  const phaseLabel = currentPhase.name
+  const phaseLabel = currentPhase.label
   const secondsText = String(displayCount).padStart(2, '0')
-  const practiceProgress = Math.min(flowElapsedInSec / TEST_FLOW_478_DURATION, 1)
+  const practiceProgress = Math.min(flowElapsedInSec / activeFlowTotalDuration, 1)
   const practiceProgressPercent = practiceProgress * 100
   const progressBarBackground = `linear-gradient(90deg, #d5d7df 0%, #d5d7df ${practiceProgressPercent}%, #3a3c48 ${practiceProgressPercent}%, #3a3c48 100%)`
-  const remainingPracticeSeconds = Math.max(Math.ceil(TEST_FLOW_478_DURATION - flowElapsedInSec), 0)
+  const remainingPracticeSeconds = Math.max(Math.ceil(activeFlowTotalDuration - flowElapsedInSec), 0)
   const displayTime = formatSecondsToClock(remainingPracticeSeconds)
 
   return (
