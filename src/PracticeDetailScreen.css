@@ -1,0 +1,167 @@
+.practice-detail-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #111111;
+}
+
+.practice-detail-card {
+  width: 208px;
+  height: 248px;
+  background: #181a2c;
+  border-radius: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.practice-detail-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 16px 16px 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.practice-detail-content::-webkit-scrollbar {
+  display: none;
+}
+
+.practice-detail-header {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-shrink: 0;
+  min-height: 8.78px;
+  margin: 0 0 16px 0;
+}
+
+.practice-detail-logo {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.screen-logo {
+  display: block;
+  margin: 0;
+  opacity: 0.8;
+  flex-shrink: 0;
+  width: 70.24px;
+  height: 8.78px;
+}
+
+.practice-detail-back {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: #ffffff;
+  opacity: 0.8;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0;
+  text-align: right;
+  text-decoration: none;
+  transform: translateY(-2px);
+  transition: color 300ms ease;
+  cursor: pointer;
+}
+
+.practice-detail-back:hover {
+  color: #ffb34f;
+}
+
+.practice-detail-title {
+  margin: 0 0 8px 0;
+  align-self: stretch;
+  text-align: left;
+}
+
+.practice-detail-params {
+  margin: 0 0 16px 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.practice-detail-param-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.practice-detail-param-label,
+.practice-detail-param-value {
+  margin: 0;
+  text-align: left;
+  color: #ffffff;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  opacity: 0.8;
+}
+
+.practice-detail-param-value {
+  text-align: right;
+}
+
+.practice-detail-short,
+.practice-detail-long,
+.practice-detail-best-for {
+  margin: 0;
+  align-self: stretch;
+  text-align: left;
+  color: #ffffff;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  opacity: 0.8;
+}
+
+.practice-detail-short {
+  margin: 0 0 16px 0;
+}
+
+.practice-detail-long {
+  margin: 0 0 10px 0;
+}
+
+.practice-detail-best-for {
+  margin: 0;
+}
+
+.practice-detail-cta {
+  width: 100%;
+  padding: 11px 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: 0 0 12px 12px;
+  background: #ffb34f;
+  color: #111111;
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: normal;
+  cursor: pointer;
+}

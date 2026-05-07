@@ -1,0 +1,53 @@
+.practice-item {
+  display: flex;
+  width: 176px;
+  align-self: stretch;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2px;
+  border: 0;
+  padding: 12px 0;
+  margin: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.practice-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.practice-item-title {
+  color: #ffffff;
+}
+
+.practice-item-description {
+  color: #ffffff;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  opacity: 0.8;
+}
+
+.practice-item-arrow {
+  width: 16px;
+  height: 16px;
+  display: block;
+  margin-top: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+}
+
+.practice-item:hover .practice-item-title {
+  color: #ffb34f;
+}
+
+.practice-item:hover .practice-item-arrow {
+  opacity: 1;
+}
