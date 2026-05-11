@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "main": "electron/main.cjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sdonyushko-source/bro.inhale.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -55,8 +59,8 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "OWNER",
-      "repo": "REPO",
+      "owner": "sdonyushko-source",
+      "repo": "bro.inhale",
       "releaseType": "draft"
     }
   }
