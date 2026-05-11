@@ -1,4 +1,5 @@
 const { app, BrowserWindow } = require('electron')
+const { autoUpdater } = require('electron-updater')
 const path = require('path')
 
 function createWindow() {
@@ -24,8 +25,48 @@ function createWindow() {
   win.loadFile(path.join(__dirname, '../dist/index.html'))
 }
 
+function initAutoUpdater() {
+  if (!app.isPackaged) {
+    return
+  }
+
+  autoUpdater.on('checking-for-update', () => {
+    console.log('[updater] checking for update')
+  })
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('[updater] update available', info?.version || info)
+  })
+
+  autoUpdater.on('update-not-available', (info) => {
+    console.log('[updater] update not available', info?.version || info)
+  })
+
+  autoUpdater.on('error', (error) => {
+    console.log('[updater] error', error?.message || error)
+  })
+
+  autoUpdater.on('download-progress', (progress) => {
+    console.log('[updater] download progress', {
+      percent: progress?.percent,
+      transferred: progress?.transferred,
+      total: progress?.total,
+      bytesPerSecond: progress?.bytesPerSecond,
+    })
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('[updater] update downloaded', info?.version || info)
+  })
+
+  autoUpdater.checkForUpdatesAndNotify().catch((error) => {
+    console.log('[updater] check failed', error?.message || error)
+  })
+}
+
 app.whenReady().then(() => {
   createWindow()
+  initAutoUpdater()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
