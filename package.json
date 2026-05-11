@@ -2,12 +2,15 @@
   "name": "breath-app-clean",
   "private": true,
   "version": "0.0.0",
+  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron": "electron .",
+    "dist:mac": "npm run build && electron-builder --mac dmg"
   },
   "dependencies": {
     "framer-motion": "^12.38.0",
@@ -20,10 +23,30 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "electron": "^42.0.1",
+    "electron-builder": "^26.8.1",
     "eslint": "^10.2.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
     "vite": "^8.0.10"
+  },
+  "build": {
+    "appId": "com.breathapp.clean",
+    "productName": "bro.inhale",
+    "artifactName": "bro.inhale-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.healthcare-fitness",
+      "icon": "build/icon.icns"
+    }
   }
 }
