@@ -205,7 +205,7 @@ function App() {
 
     let frameId = 0
     const testDurationMs = activeFlowTotalDuration * 1000
-    const flowStartMs = performance.now()
+    const flowStartMs = performance.now() - elapsedInCycleMs
 
     const tick = () => {
       const now = performance.now()
@@ -222,7 +222,15 @@ function App() {
 
     frameId = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frameId)
-  }, [showSplash, showPracticeList, showPracticeDetail, activeFlowConfig, flowMode, activeFlowTotalDuration])
+  }, [
+    showSplash,
+    showPracticeList,
+    showPracticeDetail,
+    activeFlowConfig,
+    flowMode,
+    activeFlowTotalDuration,
+    elapsedInCycleMs,
+  ])
 
   if (showSplash) {
     return <SplashScreen />
@@ -295,7 +303,16 @@ function App() {
     )
   }
 
-  if (!activeFlowConfig || flowMode !== 'running') {
+  const handleCloseFlow = () => {
+    setFlowMode('idle')
+    setActiveFlowPracticeId(null)
+    setElapsedInCycleMs(0)
+    setCountdownIndex(0)
+    setShowPracticeDetail(false)
+    setShowPracticeList(true)
+  }
+
+  if (!activeFlowConfig || (flowMode !== 'running' && flowMode !== 'paused')) {
     return null
   }
 
@@ -341,18 +358,47 @@ function App() {
   const progressBarBackground = `linear-gradient(90deg, #d5d7df 0%, #d5d7df ${practiceProgressPercent}%, #3a3c48 ${practiceProgressPercent}%, #3a3c48 100%)`
   const remainingPracticeSeconds = Math.max(Math.ceil(activeFlowTotalDuration - flowElapsedInSec), 0)
   const displayTime = formatSecondsToClock(remainingPracticeSeconds)
+  const isPaused = flowMode === 'paused'
 
   return (
     <main className="page">
-      <section className="card" aria-label="Breathing card">
-        <h1 className="title">
-          <span className="title-phase">
-            <span className="title-phase-value">{phaseLabel}</span>
-          </span>
-          <span className="title-seconds">
-            <span className="title-seconds-value">{secondsText}</span>
-          </span>
-        </h1>
+      <section
+        className={`card${isPaused ? ' paused-screen' : ''}`}
+        aria-label="Breathing card"
+        onClick={() => setFlowMode(isPaused ? 'running' : 'paused')}
+      >
+        {isPaused ? (
+          <>
+            <button
+              type="button"
+              className="paused-close-button"
+              aria-label="Close"
+              onClick={(event) => {
+                event.stopPropagation()
+                handleCloseFlow()
+              }}
+            >
+              close
+            </button>
+            <h1 className="title">
+              <span className="title-phase">
+                <span className="title-phase-value">paused</span>
+              </span>
+              <span className="title-seconds" aria-hidden="true">
+                <span className="title-seconds-value">--</span>
+              </span>
+            </h1>
+          </>
+        ) : (
+          <h1 className="title">
+            <span className="title-phase">
+              <span className="title-phase-value">{phaseLabel}</span>
+            </span>
+            <span className="title-seconds">
+              <span className="title-seconds-value">{secondsText}</span>
+            </span>
+          </h1>
+        )}
         <div className="orb-wrap" aria-hidden="true">
           <svg className="orb-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" fill="none">
             <defs>
@@ -363,6 +409,10 @@ function App() {
             </defs>
             <circle cx="70" cy="70" r={orbRadius} fill="url(#orbGradient)" />
           </svg>
+          <div
+            className={`orb-paused-overlay${isPaused ? ' orb-paused-overlay--visible' : ''}`}
+            style={{ width: `${orbSize}px`, height: `${orbSize}px` }}
+          />
         </div>
         <div className="status-row">
           <span>left</span>

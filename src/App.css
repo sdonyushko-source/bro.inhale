@@ -158,3 +158,65 @@ body {
   line-height: normal;
 }
 
+.paused-screen {
+  cursor: pointer;
+}
+
+.paused-title {
+  position: absolute;
+  top: 27px;
+  left: 30px;
+  transform: none;
+  margin: 0;
+  color: #f4f4f6;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0;
+  font-family: 'DM Mono', monospace;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.paused-close-button {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: #ffffff;
+  opacity: 0.8;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0;
+  text-align: right;
+  text-decoration: none;
+  transform: none;
+  transition: color 300ms ease;
+  cursor: pointer;
+}
+
+.paused-close-button:hover {
+  color: #ffb34f;
+}
+
+.orb-paused-overlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(50% 61.22% at 50% 84.18%, #c2c3d1 0%, #3c3f5d 100%);
+  opacity: 0;
+  transition: opacity 350ms ease;
+  pointer-events: none;
+}
+
+.orb-paused-overlay--visible {
+  opacity: 1;
+}
+
