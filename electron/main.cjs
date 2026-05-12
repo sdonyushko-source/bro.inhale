@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, dialog } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const path = require('path')
 
@@ -57,6 +57,25 @@ function initAutoUpdater() {
 
   autoUpdater.on('update-downloaded', (info) => {
     console.log('[updater] update downloaded', info?.version || info)
+
+    dialog
+      .showMessageBox({
+        type: 'info',
+        title: 'Update ready',
+        message: 'A new version of bro.inhale has been downloaded.',
+        detail: 'Restart the app to install the update.',
+        buttons: ['Later', 'Restart'],
+        defaultId: 1,
+        cancelId: 0,
+      })
+      .then(({ response }) => {
+        if (response === 1) {
+          autoUpdater.quitAndInstall()
+        }
+      })
+      .catch((error) => {
+        console.error('[autoUpdater] update dialog error:', error)
+      })
   })
 
   autoUpdater.checkForUpdatesAndNotify().catch((error) => {
