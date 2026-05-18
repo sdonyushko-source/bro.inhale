@@ -16,11 +16,14 @@ function createWindow() {
     fullscreenable: false,
     backgroundColor: '#181A2C',
     title: 'bro.inhale',
+    alwaysOnTop: true,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
     },
   })
+
+  win.setAlwaysOnTop(true, 'floating')
 
   win.loadFile(path.join(__dirname, '../dist/index.html'))
 }
