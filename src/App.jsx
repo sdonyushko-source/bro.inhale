@@ -152,6 +152,86 @@ function formatSecondsToClock(seconds) {
   return `${minutes}:${String(secs).padStart(2, '0')}`
 }
 
+const NBSP = '\u00A0'
+
+function formatTrayStatus(phase, seconds) {
+  const phaseLabelMap = {
+    inhale: 'inhale',
+    hold: 'hold',
+    exhale: 'exhale',
+  }
+
+  const label = phaseLabelMap[phase] || phase
+  const paddedLabel = label.padEnd(6, NBSP)
+  const paddedSeconds = String(seconds).padStart(2, '0')
+
+  return `${paddedLabel} ${paddedSeconds}`
+}
+
+function getTrayStatusText({
+  showSplash,
+  showPracticeList,
+  showPracticeDetail,
+  flowMode,
+  activeFlowPhases,
+  activeFlowConfig,
+  elapsedInCycleMs,
+  activeFlowTotalDuration,
+  activeFlowCycleDuration,
+}) {
+  if (showSplash || showPracticeList || showPracticeDetail) {
+    return 'bro.inhale'
+  }
+
+  if (flowMode === 'paused') {
+    return 'paused'
+  }
+
+  if (flowMode === 'finished') {
+    return 'done'
+  }
+
+  if (!activeFlowConfig || flowMode !== 'running') {
+    return 'bro.inhale'
+  }
+
+  const elapsedInCycleSec = elapsedInCycleMs / 1000
+  const flowElapsedInSec = Math.min(elapsedInCycleSec, activeFlowTotalDuration)
+  const elapsedInTestCycleSec =
+    flowElapsedInSec >= activeFlowTotalDuration
+      ? activeFlowCycleDuration - 0.001
+      : flowElapsedInSec % activeFlowCycleDuration
+  let phaseStart = 0
+  let currentPhase = activeFlowPhases[0]
+
+  for (let i = 0; i < activeFlowPhases.length; i += 1) {
+    const phase = activeFlowPhases[i]
+    if (elapsedInTestCycleSec < phaseStart + phase.duration) {
+      currentPhase = phase
+      break
+    }
+    phaseStart += phase.duration
+  }
+
+  const elapsedInPhaseSec = elapsedInTestCycleSec - phaseStart
+  const phaseTimeLeft = currentPhase.duration - elapsedInPhaseSec
+  const displayCount = Math.max(1, Math.ceil(phaseTimeLeft))
+  const { colorPhase } = currentPhase
+
+  if (colorPhase !== 'inhale' && colorPhase !== 'hold' && colorPhase !== 'exhale') {
+    return 'bro.inhale'
+  }
+
+  return formatTrayStatus(colorPhase, displayCount)
+}
+
+function getTraySessionState(flowMode) {
+  if (flowMode === 'running') return 'running'
+  if (flowMode === 'paused') return 'paused'
+  if (flowMode === 'finished') return 'finished'
+  return 'idle'
+}
+
 function App() {
   const [showSplash, setShowSplash] = useState(true)
   const [showPracticeList, setShowPracticeList] = useState(false)
@@ -174,6 +254,64 @@ function App() {
 
     return () => clearTimeout(timerId)
   }, [])
+
+  useEffect(() => {
+    const trayApi = window.broInhaleTray
+    if (!trayApi) {
+      return undefined
+    }
+
+    const unsubscribePause = trayApi.onPause(() => {
+      setFlowMode((mode) => {
+        if (mode === 'running') return 'paused'
+        if (mode === 'paused') return 'running'
+        return mode
+      })
+    })
+
+    const unsubscribeRestart = trayApi.onRestart(() => {
+      setActiveFlowPracticeId((practiceId) => {
+        if (!practiceId) {
+          return practiceId
+        }
+        setCountdownIndex(0)
+        setElapsedInCycleMs(0)
+        setFlowMode('countdown')
+        return practiceId
+      })
+    })
+
+    return () => {
+      unsubscribePause()
+      unsubscribeRestart()
+    }
+  }, [])
+
+  useEffect(() => {
+    const statusText = getTrayStatusText({
+      showSplash,
+      showPracticeList,
+      showPracticeDetail,
+      flowMode,
+      activeFlowPhases,
+      activeFlowConfig,
+      elapsedInCycleMs,
+      activeFlowTotalDuration,
+      activeFlowCycleDuration,
+    })
+    window.broInhaleTray?.updateStatus?.(statusText)
+    window.broInhaleTray?.updateSessionState?.(getTraySessionState(flowMode))
+  }, [
+    showSplash,
+    showPracticeList,
+    showPracticeDetail,
+    flowMode,
+    activeFlowPhases,
+    activeFlowConfig,
+    elapsedInCycleMs,
+    activeFlowTotalDuration,
+    activeFlowCycleDuration,
+  ])
 
   useEffect(() => {
     if (!activeFlowConfig || flowMode !== 'countdown') {

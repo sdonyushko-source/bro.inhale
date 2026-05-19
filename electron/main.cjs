@@ -1,9 +1,96 @@
-const { app, BrowserWindow, dialog } = require('electron')
+const { app, BrowserWindow, dialog, Tray, Menu, nativeImage, ipcMain } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const path = require('path')
 
+let mainWindow = null
+let tray = null
+let sessionState = 'idle'
+
+function getTrayIconPath() {
+  if (app.isPackaged) {
+    return path.join(app.getAppPath(), 'build/tray-icon.png')
+  }
+  return path.join(__dirname, '../build/tray-icon.png')
+}
+
+function refreshTrayMenu() {
+  if (tray) {
+    tray.setContextMenu(buildTrayMenu())
+  }
+}
+
+function buildTrayMenu() {
+  const pauseLabel = sessionState === 'paused' ? 'Продолжить' : 'Пауза'
+
+  return Menu.buildFromTemplate([
+    {
+      label: 'Показать окно',
+      click: () => {
+        if (!mainWindow) return
+        mainWindow.show()
+        mainWindow.focus()
+        mainWindow.setAlwaysOnTop(true, 'floating')
+      },
+    },
+    {
+      label: 'Скрыть окно',
+      click: () => {
+        if (!mainWindow) return
+        mainWindow.hide()
+      },
+    },
+    {
+      label: 'Начать заново',
+      click: () => {
+        if (!mainWindow?.webContents) return
+        mainWindow.webContents.send('tray:restart')
+      },
+    },
+    {
+      label: pauseLabel,
+      click: () => {
+        if (!mainWindow?.webContents) return
+        mainWindow.webContents.send('tray:pause')
+      },
+    },
+    { type: 'separator' },
+    {
+      label: 'Выйти',
+      click: () => app.quit(),
+    },
+  ])
+}
+
+function createTray() {
+  if (tray) {
+    refreshTrayMenu()
+    return
+  }
+
+  const trayImage = nativeImage.createFromPath(getTrayIconPath()).resize({
+    width: 18,
+    height: 18,
+  })
+  trayImage.setTemplateImage(true)
+  tray = new Tray(trayImage)
+  tray.setToolTip('bro.inhale')
+  tray.setTitle('bro.inhale')
+  tray.setContextMenu(buildTrayMenu())
+}
+
+ipcMain.on('tray:update-status', (_event, statusText) => {
+  if (tray) {
+    tray.setTitle(statusText || '')
+  }
+})
+
+ipcMain.on('tray:update-session-state', (_event, state) => {
+  sessionState = state || 'idle'
+  refreshTrayMenu()
+})
+
 function createWindow() {
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 208,
     height: 248,
     useContentSize: true,
@@ -20,12 +107,20 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      preload: path.join(__dirname, 'preload.cjs'),
+      backgroundThrottling: false,
     },
   })
 
-  win.setAlwaysOnTop(true, 'floating')
+  mainWindow.setAlwaysOnTop(true, 'floating')
 
-  win.loadFile(path.join(__dirname, '../dist/index.html'))
+  mainWindow.on('closed', () => {
+    mainWindow = null
+  })
+
+  mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+
+  createTray()
 }
 
 function initAutoUpdater() {
@@ -93,6 +188,9 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
+    } else if (mainWindow) {
+      mainWindow.show()
+      mainWindow.focus()
     }
   })
 })
