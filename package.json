@@ -56,7 +56,10 @@
         "zip"
       ],
       "category": "public.app-category.healthcare-fitness",
-      "icon": "build/icon.icns"
+      "icon": "build/icon.icns",
+      "hardenedRuntime": false,
+      "entitlements": null,
+      "entitlementsInherit": null
     },
     "publish": {
       "provider": "github",

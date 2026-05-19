@@ -1,10 +1,72 @@
-const { app, BrowserWindow, dialog, Tray, Menu, nativeImage, ipcMain } = require('electron')
+const {
+  app,
+  BrowserWindow,
+  dialog,
+  Tray,
+  Menu,
+  nativeImage,
+  ipcMain,
+  autoUpdater: electronAutoUpdater,
+} = require('electron')
 const { autoUpdater } = require('electron-updater')
+const fs = require('fs')
 const path = require('path')
 
 let mainWindow = null
 let tray = null
 let sessionState = 'idle'
+let updateDownloaded = false
+
+function getUpdaterLogPath() {
+  return path.join(app.getPath('userData'), 'updater.log')
+}
+
+function writeUpdaterLog(level, message) {
+  const text = typeof message === 'string' ? message : JSON.stringify(message)
+  const line = `[${new Date().toISOString()}] [${level}] ${text}\n`
+
+  try {
+    fs.appendFileSync(getUpdaterLogPath(), line)
+  } catch (_error) {
+    // ignore log write errors
+  }
+
+  console.log(`[updater] [${level}]`, text)
+}
+
+function setupUpdaterLogger() {
+  autoUpdater.logger = {
+    info: (message) => writeUpdaterLog('info', message),
+    warn: (message) => writeUpdaterLog('warn', message),
+    error: (message) => writeUpdaterLog('error', message),
+    debug: (message) => writeUpdaterLog('debug', message),
+  }
+}
+
+function installDownloadedUpdate() {
+  writeUpdaterLog('info', 'installDownloadedUpdate called')
+
+  if (process.platform === 'darwin') {
+    if (tray) {
+      tray.destroy()
+      tray = null
+    }
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.removeAllListeners('close')
+      mainWindow.close()
+    }
+
+    if (electronAutoUpdater?.once) {
+      electronAutoUpdater.once('before-quit-for-update', () => {
+        writeUpdaterLog('info', 'before-quit-for-update — app.exit(0)')
+        app.exit(0)
+      })
+    }
+  }
+
+  autoUpdater.quitAndInstall(false, true)
+}
 
 function getTrayIconPath() {
   if (app.isPackaged) {
@@ -128,33 +190,40 @@ function initAutoUpdater() {
     return
   }
 
+  setupUpdaterLogger()
+  autoUpdater.autoInstallOnAppQuit = true
+  writeUpdaterLog('info', `initAutoUpdater app version ${app.getVersion()}`)
+
   autoUpdater.on('checking-for-update', () => {
-    console.log('[updater] checking for update')
+    writeUpdaterLog('info', 'checking for update')
   })
 
   autoUpdater.on('update-available', (info) => {
-    console.log('[updater] update available', info?.version || info)
+    writeUpdaterLog('info', `update available ${info?.version || ''}`)
   })
 
   autoUpdater.on('update-not-available', (info) => {
-    console.log('[updater] update not available', info?.version || info)
+    writeUpdaterLog('info', `update not available ${info?.version || ''}`)
   })
 
   autoUpdater.on('error', (error) => {
-    console.log('[updater] error', error?.message || error)
+    writeUpdaterLog('error', error?.message || error)
   })
 
   autoUpdater.on('download-progress', (progress) => {
-    console.log('[updater] download progress', {
-      percent: progress?.percent,
-      transferred: progress?.transferred,
-      total: progress?.total,
-      bytesPerSecond: progress?.bytesPerSecond,
-    })
+    writeUpdaterLog(
+      'info',
+      `download ${progress?.percent?.toFixed?.(1) ?? progress?.percent}%`,
+    )
   })
 
   autoUpdater.on('update-downloaded', (info) => {
-    console.log('[updater] update downloaded', info?.version || info)
+    if (updateDownloaded) {
+      return
+    }
+
+    updateDownloaded = true
+    writeUpdaterLog('info', `update downloaded ${info?.version || ''}`)
 
     dialog
       .showMessageBox({
@@ -168,16 +237,16 @@ function initAutoUpdater() {
       })
       .then(({ response }) => {
         if (response === 1) {
-          autoUpdater.quitAndInstall()
+          installDownloadedUpdate()
         }
       })
       .catch((error) => {
-        console.error('[autoUpdater] update dialog error:', error)
+        writeUpdaterLog('error', `update dialog error: ${error?.message || error}`)
       })
   })
 
   autoUpdater.checkForUpdatesAndNotify().catch((error) => {
-    console.log('[updater] check failed', error?.message || error)
+    writeUpdaterLog('error', `check failed: ${error?.message || error}`)
   })
 }
 
